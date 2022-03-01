@@ -8,6 +8,7 @@ class PlayScene extends Phaser.Scene {
     this.config = config;
     this.bird = null;
     this.pipes = null;
+    this.pipeHorizontalDistance = 0;
     this.pipeVerticalDistanceRange = [150, 250];
     this.pipeHorizontalDistanceRange = [400, 500];
     this.flapVelocity = 250;
@@ -19,14 +20,31 @@ class PlayScene extends Phaser.Scene {
   }
 
   create() {
-      
-    this.add.image(400, 300, "sky");
+    this.createBG();
+    this.createBird();
+    this.createPipes();
+    this.handleInput();
+  }
+  update() {
+    this.checkPlayerStatus();
+    this.recyclePipe();
+  }
 
+
+
+  
+  createBG() {
+    this.add.image(0, 0, "sky").setOrigin(0);
+  }
+
+  createBird() {
     this.bird = this.physics.add
       .sprite(this.config.startPosition.x, this.config.startPosition.y, "bird")
       .setOrigin(0);
     this.bird.body.gravity.y = 400;
+  }
 
+  createPipes() {
     this.pipes = this.physics.add.group();
 
     for (let i = 0; i < PIPES_TO_RENDER; i++) {
@@ -37,20 +55,27 @@ class PlayScene extends Phaser.Scene {
     }
 
     this.pipes.setVelocityX(-200);
+  }
 
+  handleInput() {
     this.input.on("pointerdown", this.flap, this);
     this.input.keyboard.on("keydown_SPACE", this.flap, this);
   }
 
-  update() {
-  if (this.bird.y >= this.config.height || this.bird.y <= 0 - this.bird.height) {
-    this.restartBirdPosition();
+  checkPlayerStatus(){
+    if (
+        this.bird.y >= this.config.height ||
+        this.bird.y <= 0 - this.bird.height
+      ) {
+        this.restartBirdPosition();
+      }
   }
-  this.recyclePipe();
-  }
-   placePipe(uPipe, lPipe) {
+
+  placePipe(uPipe, lPipe) {
     let rightMostX = this.getRightMostPipe();
-    let pipeVerticalDistance = Phaser.Math.Between(...this.pipeVerticalDistanceRange);
+    let pipeVerticalDistance = Phaser.Math.Between(
+      ...this.pipeVerticalDistanceRange
+    );
     let pipeVerticalPosition = Phaser.Math.Between(
       0 + 20,
       this.config.height - 20 - pipeVerticalDistance
@@ -58,14 +83,14 @@ class PlayScene extends Phaser.Scene {
     let pipeHorizontalDistance = Phaser.Math.Between(
       ...this.pipeHorizontalDistanceRange
     );
-  
+
     uPipe.x = rightMostX + pipeHorizontalDistance;
     uPipe.y = pipeVerticalPosition;
-  
+
     lPipe.x = uPipe.x;
     lPipe.y = uPipe.y + pipeVerticalDistance;
   }
-   recyclePipe() {
+  recyclePipe() {
     let tempPipe = [];
     this.pipes.getChildren().forEach((pipe) => {
       if (pipe.getBounds().right <= 0) {
@@ -74,22 +99,22 @@ class PlayScene extends Phaser.Scene {
           this.placePipe(...tempPipe);
         }
       }
-    })
+    });
   }
   getRightMostPipe() {
     let rightMostX = 0;
-  
+
     this.pipes.getChildren().forEach(function (pipe) {
       rightMostX = Math.max(pipe.x, rightMostX);
     });
     return rightMostX;
   }
   restartBirdPosition() {
-   this.bird.x = this.config.startPosition.x;
-   this.bird.y = this.config.startPosition.y;
-   this.bird.body.velocity.y = 0;
+    this.bird.x = this.config.startPosition.x;
+    this.bird.y = this.config.startPosition.y;
+    this.bird.body.velocity.y = 0;
   }
-  
+
   flap() {
     this.bird.body.velocity.y = -this.flapVelocity;
   }
