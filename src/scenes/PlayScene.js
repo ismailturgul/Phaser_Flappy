@@ -23,6 +23,7 @@ class PlayScene extends Phaser.Scene {
     this.createBG();
     this.createBird();
     this.createPipes();
+    this.createColliders();
     this.handleInput();
   }
   update() {
@@ -30,9 +31,10 @@ class PlayScene extends Phaser.Scene {
     this.recyclePipe();
   }
 
+  createColliders() {
+    this.physics.add.collider(this.bird, this.pipes, this.gameOver, null, this);
+  }
 
-
-  
   createBG() {
     this.add.image(0, 0, "sky").setOrigin(0);
   }
@@ -62,13 +64,13 @@ class PlayScene extends Phaser.Scene {
     this.input.keyboard.on("keydown_SPACE", this.flap, this);
   }
 
-  checkPlayerStatus(){
+  checkPlayerStatus() {
     if (
-        this.bird.y >= this.config.height ||
-        this.bird.y <= 0 - this.bird.height
-      ) {
-        this.restartBirdPosition();
-      }
+      this.bird.y >= this.config.height ||
+      this.bird.y <= 0 - this.bird.height
+    ) {
+      this.gameOver();
+    }
   }
 
   placePipe(uPipe, lPipe) {
@@ -109,7 +111,7 @@ class PlayScene extends Phaser.Scene {
     });
     return rightMostX;
   }
-  restartBirdPosition() {
+  gameOver() {
     this.bird.x = this.config.startPosition.x;
     this.bird.y = this.config.startPosition.y;
     this.bird.body.velocity.y = 0;
